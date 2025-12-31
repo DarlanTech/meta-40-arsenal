@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meta 40: Sistema de Gestão de Conhecimento</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #020617;
+            --bg-card: #0f172a;
+            --accent: #3b82f6;
+        }
+        body {
+            background-color: var(--bg-deep);
+            color: #f1f5f9;
+            font-family: 'Inter', sans-serif;
+        }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .glass {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+        }
+        .book-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .book-card:hover {
+            border-color: var(--accent);
+            background: #1e293b;
+        }
+        input[type="checkbox"] {
+            appearance: none;
+            width: 1.5rem;
+            height: 1.5rem;
+            border: 2px solid #334155;
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+        }
+        input[type="checkbox"]:checked {
+            background-color: var(--accent);
+            border-color: var(--accent);
+        }
+        input[type="checkbox"]:checked::after {
+            content: "✓";
+            position: absolute;
+            color: white;
+            font-weight: bold;
+            left: 4px;
+            top: -2px;
+        }
+        .status-badge { font-size: 0.65rem; padding: 2px 8px; border-radius: 9999px; font-weight: 700; text-transform: uppercase; }
+        .badge-radar { background: #1d4ed8; color: #dbeafe; }
+        .badge-faca { background: #b91c1c; color: #fee2e2; }
+        .badge-escudo { background: #047857; color: #d1fae5; }
+        .badge-macro { background: #a16207; color: #fef9c3; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #020617; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+    </style>
+</head>
+<body class="min-h-screen pb-20">
+
+    <!-- Header Fixo -->
+    <header class="sticky top-0 z-50 glass border-b border-slate-800 px-4 py-4 mb-8">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-xl font-bold tracking-tighter text-white flex items-center gap-2">
+                    <span class="text-blue-500">ARSENAL</span> META 40
+                </h1>
+                <p class="text-xs text-slate-400 uppercase tracking-widest">Sistema de Inteligência Comportamental</p>
+            </div>
+            <div class="flex items-center gap-6">
+                <div class="text-right">
+                    <div class="text-[10px] text-slate-500 font-bold uppercase">Eficiência de Campo</div>
+                    <div id="progress-text" class="text-xl mono font-bold text-blue-400">0%</div>
+                </div>
+                <div class="w-32 bg-slate-800 h-2 rounded-full overflow-hidden">
+                    <div id="progress-bar" class="bg-blue-500 h-full w-0 transition-all duration-500"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4">
+        <!-- Filtros Rápidos -->
+        <section class="mb-8 flex flex-wrap gap-2">
+            <button onclick="setFilter('all')" class="filter-btn active bg-blue-600 text-white px-4 py-1.5 rounded-md text-sm font-semibold">Todos</button>
+            <button onclick="setFilter('q1')" class="filter-btn bg-slate-800 hover:bg-slate-700 px-4 py-1.5 rounded-md text-sm font-semibold">Q1</button>
+            <button onclick="setFilter('q2')" class="filter-btn bg-slate-800 hover:bg-slate-700 px-4 py-1.5 rounded-md text-sm font-semibold">Q2</button>
+            <button onclick="setFilter('q3')" class="filter-btn bg-slate-800 hover:bg-slate-700 px-4 py-1.5 rounded-md text-sm font-semibold">Q3</button>
+            <button onclick="setFilter('q4')" class="filter-btn bg-slate-800 hover:bg-slate-700 px-4 py-1.5 rounded-md text-sm font-semibold">Q4</button>
+            <div class="h-6 w-[1px] bg-slate-700 mx-2"></div>
+            <button onclick="setFilter('radar')" class="filter-btn bg-slate-800 hover:bg-slate-700 px-4 py-1.5 rounded-md text-sm font-semibold text-blue-400">Radar</button>
+            <button onclick="setFilter('faca')" class="filter-btn bg-slate-800 hover:bg-slate-700 px-4 py-1.5 rounded-md text-sm font-semibold text-red-400">Faca</button>
+        </section>
+
+        <!-- Lista de Livros -->
+        <div id="arsenal-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Injetado via JavaScript -->
+        </div>
+    </main>
+
+    <!-- Modal de Notas (Simples) -->
+    <div id="note-modal" class="fixed inset-0 bg-black/80 hidden z-[60] flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 w-full max-w-lg rounded-2xl p-6">
+            <h3 id="modal-title" class="text-xl font-bold mb-2">Lição Estratégica</h3>
+            <textarea id="modal-textarea" class="w-full h-40 bg-slate-800 border border-slate-700 rounded-xl p-4 text-slate-200 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Escreve aqui o principal insight..."></textarea>
+            <div class="flex justify-end gap-3 mt-4">
+                <button onclick="closeModal()" class="px-4 py-2 text-slate-400 hover:text-white transition">Cancelar</button>
+                <button onclick="saveNote()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-lg font-bold transition">Gravar na Mente</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const books = [
+            { id: 1, q: 'q1', cat: 'radar', title: "O que todo o corpo fala", author: "Joe Navarro", badge: "Radar" },
+            { id: 2, q: 'q1', cat: 'macro', title: "Sapiens", author: "Yuval Noah Harari", badge: "Macro" },
+            { id: 3, q: 'q1', cat: 'escudo', title: "O Alquimista", author: "Paulo Coelho", badge: "Escudo" },
+            { id: 4, q: 'q1', cat: 'macro', title: "A Peste", author: "Albert Camus", badge: "Macro" },
+            { id: 5, q: 'q1', cat: 'escudo', title: "O Ego é o Inimigo", author: "Ryan Holiday", badge: "Escudo" },
+            { id: 6, q: 'q1', cat: 'macro', title: "O Alienista", author: "Machado de Assis", badge: "Macro" },
+            { id: 7, q: 'q1', cat: 'radar', title: "Spy the Lie", author: "Philip Houston", badge: "Radar" },
+            { id: 8, q: 'q1', cat: 'faca', title: "As 33 Estratégias de Guerra", author: "Robert Greene", badge: "Faca" },
+            { id: 9, q: 'q1', cat: 'macro', title: "Psicologia das Massas", author: "Gustave Le Bon", badge: "Macro" },
+            { id: 10, q: 'q1', cat: 'radar', title: "A Arte de Ler Mentes", author: "Henrik Fexeus", badge: "Radar" },
+            { id: 11, q: 'q2', cat: 'faca', title: "Pitch Anything", author: "Oren Klaff", badge: "Faca" },
+            { id: 12, q: 'q2', cat: 'faca', title: "Flip the Script", author: "Oren Klaff", badge: "Faca" },
+            { id: 13, q: 'q2', cat: 'macro', title: "21 Lições p/ Século 21", author: "Harari", badge: "Macro" },
+            { id: 14, q: 'q2', cat: 'escudo', title: "Cem Anos de Solidão", author: "G. Márquez", badge: "Escudo" },
+            { id: 15, q: 'q2', cat: 'macro', title: "Fundação", author: "Isaac Asimov", badge: "Macro" },
+            { id: 16, q: 'q2', cat: 'faca', title: "As 48 Leis do Poder", author: "Robert Greene", badge: "Faca" },
+            { id: 17, q: 'q2', cat: 'macro', title: "O Padrinho", author: "Mario Puzo", badge: "Macro" },
+            { id: 18, q: 'q2', cat: 'radar', title: "Influência", author: "Robert Cialdini", badge: "Radar" },
+            { id: 19, q: 'q2', cat: 'faca', title: "Steve Jobs", author: "Walter Isaacson", badge: "Faca" },
+            { id: 20, q: 'q2', cat: 'macro', title: "Napoleão: Uma Vida", author: "Andrew Roberts", badge: "Macro" },
+            { id: 21, q: 'q3', cat: 'escudo', title: "Os Irmãos Karamazov", author: "Dostoiévski", badge: "Escudo" },
+            { id: 22, q: 'q3', cat: 'escudo', title: "Hábitos Atómicos", author: "James Clear", badge: "Escudo" },
+            { id: 23, q: 'q3', cat: 'radar', title: "Rápido e Devagar", author: "Daniel Kahneman", badge: "Radar" },
+            { id: 24, q: 'q3', cat: 'escudo', title: "Antifrágil", author: "Nassim Taleb", badge: "Escudo" },
+            { id: 25, q: 'q3', cat: 'escudo', title: "O Jogador", author: "Dostoiévski", badge: "Escudo" },
+            { id: 26, q: 'q3', cat: 'macro', title: "O Processo", author: "Franz Kafka", badge: "Macro" },
+            { id: 27, q: 'q3', cat: 'escudo', title: "O Obstáculo é o Caminho", author: "Ryan Holiday", badge: "Escudo" },
+            { id: 28, q: 'q3', cat: 'faca', title: "A Loja de Tudo", author: "Jeff Bezos", badge: "Faca" },
+            { id: 29, q: 'q3', cat: 'faca', title: "Zero to One", author: "Peter Thiel", badge: "Faca" },
+            { id: 30, q: 'q3', cat: 'escudo', title: "O Retrato de Dorian Gray", author: "Oscar Wilde", badge: "Escudo" },
+            { id: 31, q: 'q4', cat: 'escudo', title: "Crime e Castigo", author: "Dostoiévski", badge: "Escudo" },
+            { id: 32, q: 'q4', cat: 'faca', title: "A Arte da Guerra", author: "Sun Tzu", badge: "Faca" },
+            { id: 33, q: 'q4', cat: 'faca', title: "O Príncipe", author: "Maquiavel", badge: "Faca" },
+            { id: 34, q: 'q4', cat: 'escudo', title: "Maestria", author: "Robert Greene", badge: "Escudo" },
+            { id: 35, q: 'q4', cat: 'faca', title: "O Conde de Monte Cristo", author: "Dumas", badge: "Faca" },
+            { id: 36, q: 'q4', cat: 'macro', title: "Coração das Trevas", author: "Conrad", badge: "Macro" },
+            { id: 37, q: 'q4', cat: 'faca', title: "Cisnes Negros", author: "Chris Voss", badge: "Faca" },
+            { id: 38, q: 'q4', cat: 'radar', title: "Dicionário Linguagem Corporal", author: "Joe Navarro", badge: "Radar" },
+            { id: 39, q: 'q4', cat: 'macro', title: "Pai Rico, Pai Pobre", author: "Kiyosaki", badge: "Macro" },
+            { id: 40, q: 'q4', cat: 'escudo', title: "Em Busca de Sentido", author: "Viktor Frankl", badge: "Escudo" }
+        ];
+
+        let state = JSON.parse(localStorage.getItem('meta40_v2')) || {
+            done: [30], // Dorian Gray como default
+            notes: {},
+            currentFilter: 'all'
+        };
+
+        function save() {
+            localStorage.setItem('meta40_v2', JSON.stringify(state));
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const total = books.length;
+            const completed = state.done.length;
+            const percentage = Math.round((completed / total) * 100);
+            
+            document.getElementById('progress-text').innerText = percentage + '%';
+            document.getElementById('progress-bar').style.width = percentage + '%';
+        }
+
+        function toggleBook(id) {
+            const index = state.done.indexOf(id);
+            if (index > -1) {
+                state.done.splice(index, 1);
+            } else {
+                state.done.push(id);
+            }
+            save();
+            render();
+        }
+
+        let activeNoteId = null;
+        function openNote(id) {
+            activeNoteId = id;
+            const book = books.find(b => b.id === id);
+            document.getElementById('modal-title').innerText = book.title;
+            document.getElementById('modal-textarea').value = state.notes[id] || '';
+            document.getElementById('note-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('note-modal').classList.add('hidden');
+        }
+
+        function saveNote() {
+            state.notes[activeNoteId] = document.getElementById('modal-textarea').value;
+            save();
+            closeModal();
+            render();
+        }
+
+        function setFilter(filter) {
+            state.currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-blue-600', 'text-white');
+                btn.classList.add('bg-slate-800');
+            });
+            event.target.classList.add('active', 'bg-blue-600', 'text-white');
+            render();
+        }
+
+        function render() {
+            const grid = document.getElementById('arsenal-grid');
+            grid.innerHTML = '';
+
+            let filtered = books;
+            if (state.currentFilter.startsWith('q')) {
+                filtered = books.filter(b => b.q === state.currentFilter);
+            } else if (state.currentFilter !== 'all') {
+                filtered = books.filter(b => b.cat === state.currentFilter);
+            }
+
+            filtered.forEach(book => {
+                const isDone = state.done.includes(book.id);
+                const hasNote = !!state.notes[book.id];
+                
+                const card = document.createElement('div');
+                card.className = `book-card glass p-4 rounded-xl flex items-center gap-4 ${isDone ? 'opacity-50 border-green-900/30' : 'border-slate-800'}`;
+                
+                card.innerHTML = `
+                    <input type="checkbox" ${isDone ? 'checked' : ''} onchange="toggleBook(${book.id})">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="status-badge badge-${book.cat}">${book.badge}</span>
+                            <span class="text-[10px] text-slate-500 font-bold uppercase">${book.q}</span>
+                        </div>
+                        <h4 class="font-bold text-sm text-slate-100 truncate">${book.title}</h4>
+                        <p class="text-xs text-slate-500">${book.author}</p>
+                    </div>
+                    <button onclick="openNote(${book.id})" class="p-2 rounded-lg hover:bg-slate-800 transition relative">
+                        <svg class="w-5 h-5 ${hasNote ? 'text-blue-400' : 'text-slate-600'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                        ${hasNote ? '<span class="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>' : ''}
+                    </button>
+                `;
+                grid.appendChild(card);
+            });
+            updateProgress();
+        }
+
+        // Inicialização
+        window.onload = render;
+    </script>
+</body>
+</html>
